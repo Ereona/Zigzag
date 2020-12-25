@@ -15,7 +15,7 @@ public class TransformFollow : MonoBehaviour
     public Vector3 posOff;
     public Vector3 rotOff;
 
-    protected virtual void LateUpdate()
+    private void LateUpdate()
     {
         if (ObjectToFollow == null) return;
         transform.position = new Vector3(

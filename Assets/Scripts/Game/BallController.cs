@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
-    public Rigidbody Ball;
+    public BallObject Ball;
     public VoidEventChannelSO StartGameEvent;
     public VoidEventChannelSO TapEvent;
     public VoidEventChannelSO GameOverEvent;
     public BallSettingsSO Settings;
 
-    private bool forward;
+    private Direction direction;
     private bool started;
 
     private void Start()
@@ -29,20 +29,21 @@ public class BallController : MonoBehaviour
 
     private void OnGameStarted()
     {
-        forward = true;
+        direction = Direction.Forward;
+        Ball.index = -1;
         started = true;
-        Ball.isKinematic = false;
+        Ball.Rb.isKinematic = false;
         Ball.transform.position = new Vector3(0, Settings.BallSize / 2, 0);
         Ball.transform.localScale = Vector3.one * Settings.BallSize;
-        Ball.velocity = GetMovingDirection();
+        Ball.Rb.velocity = GetMovingDirection();
     }
 
     private void OnTap()
     {
         if (started)
         {
-            forward = !forward;
-            Ball.velocity = GetMovingDirection();
+            direction = direction == Direction.Forward ? Direction.Right : Direction.Forward;
+            Ball.Rb.velocity = GetMovingDirection();
         }
     }
 
@@ -56,31 +57,28 @@ public class BallController : MonoBehaviour
 
     private void RefreshVelocity()
     {
-        Ball.AddForce(GetMovingDirection(), ForceMode.Acceleration);
-        float magnitude = Mathf.Max(Ball.velocity.x, Ball.velocity.z);
+        Ball.Rb.AddForce(GetMovingDirection(), ForceMode.Acceleration);
+        float magnitude = Mathf.Max(Ball.Rb.velocity.x, Ball.Rb.velocity.z);
         if (magnitude > Settings.BallVelocity)
         {
-            Ball.velocity = Ball.velocity / magnitude;
+            Ball.Rb.velocity = Ball.Rb.velocity / magnitude * Settings.BallVelocity;
         }
     }
 
     private Vector3 GetMovingDirection()
     {
-        Vector3 direction;
-        if (forward)
+        switch (direction)
         {
-            direction = new Vector3(0, 0, 1);
+            case Direction.Forward:
+                return new Vector3(0, 0, 1) * Settings.BallVelocity;
+            case Direction.Right:
+             return new Vector3(1, 0, 0) * Settings.BallVelocity;
         }
-        else
-        {
-            direction = new Vector3(1, 0, 0);
-        }
-        return direction;
+        throw new System.NotImplementedException("Unknown direction");
     }
 
     private void OnGameOver()
     {
-        Ball.isKinematic = true;
         started = false;
     }
 }
