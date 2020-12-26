@@ -18,6 +18,8 @@ public class BallController : MonoBehaviour
         StartGameEvent.OnEventRaised += OnGameStarted;
         TapEvent.OnEventRaised += OnTap;
         GameOverEvent.OnEventRaised += OnGameOver;
+        Ball.transform.position = new Vector3(0, Settings.BallSize / 2, 0);
+        Ball.transform.localScale = Vector3.one * Settings.BallSize;
     }
 
     private void OnDestroy()

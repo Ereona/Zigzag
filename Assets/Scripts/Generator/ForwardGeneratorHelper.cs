@@ -6,7 +6,7 @@ public class ForwardGeneratorHelper : GeneratorHelper
 {
     public override Direction Direction => Direction.Forward;
 
-    public override void FillBlockCoords(BlockModel block, Vector2Int currentPos, int widthCoord)
+    public override void FillBlockCoords(LevelObjectModel block, Vector2Int currentPos, int widthCoord)
     {
         block.x = widthCoord;
         block.y = currentPos.y;

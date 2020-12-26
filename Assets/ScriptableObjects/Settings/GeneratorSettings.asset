@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb2eb2843422ab74b8d3b956d39f3881, type: 3}
   m_Name: GeneratorSettings
   m_EditorClassIdentifier: 
-  PathWidth: 2
+  PathWidth: 1
   MaxSegmentLength: 20
   VisibleFieldLength: 32

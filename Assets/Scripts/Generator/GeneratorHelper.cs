@@ -8,7 +8,7 @@ public abstract class GeneratorHelper
 
     public abstract int GetMinWidthCoordForPath(Vector2Int currentPos, int pathWidth);
     public abstract int GetMaxWidthCoordForPath(Vector2Int currentPos, int pathWidth);
-    public abstract void FillBlockCoords(BlockModel block, Vector2Int currentPos, int widthCoord);
+    public abstract void FillBlockCoords(LevelObjectModel block, Vector2Int currentPos, int widthCoord);
     public abstract Vector2Int GetShiftForCurrentPosInPath();
     public abstract Vector2Int GetShiftForCurrentPosAfterTurn(int pathWidth);
 

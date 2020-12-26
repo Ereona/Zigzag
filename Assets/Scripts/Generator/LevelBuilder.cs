@@ -5,14 +5,15 @@ using UnityEngine;
 
 public class LevelBuilder : MonoBehaviour
 {
-    public BlockObject BlockPrefab;
+    public ObjectsStorage Storage;
     public BallObject Ball;
     public VoidEventChannelSO GameStartedEvent;
     public VoidEventChannelSO GameOverEvent;
-    public GeneratorSettingsSO Settings;
+    public GeneratorSettingsSO LevelSettings;
+    public CrystalGeneratorSettingsSO CrystalSettings;
 
-    private List<BlockObject> Blocks = new List<BlockObject>();
-    private List<BlockObject> DestroyingBlocks = new List<BlockObject>();
+    private List<LevelObject> Objects = new List<LevelObject>();
+    private List<LevelObject> DestroyingObjects = new List<LevelObject>();
     private LevelGenerator Generator;
     private bool firstTime;
 
@@ -21,7 +22,7 @@ public class LevelBuilder : MonoBehaviour
         firstTime = true;
         GameStartedEvent.OnEventRaised += OnGameStarted;
         GameOverEvent.OnEventRaised += OnGameOver;
-        Generator = new LevelGenerator();
+        Generator = new LevelGeneratorWithCrystals(CrystalSettings.GenMode, CrystalSettings.BunchSize);
         GenerateStartPlace();
     }
 
@@ -47,39 +48,40 @@ public class LevelBuilder : MonoBehaviour
 
     private void GenerateStartPlace()
     {
-        List<BlockModel> blockModels = Generator.GenerateStartPlace();
-        foreach (BlockModel model in blockModels)
+        List<LevelObjectModel> objectModels = Generator.GenerateStartPlace();
+        foreach (LevelObjectModel model in objectModels)
         {
-            AddBlock(model);
+            AddObject(model);
         }
-        while (Blocks.Last().index < Settings.VisibleFieldLength)
+        while (Objects.Last().index < LevelSettings.VisibleFieldLength)
         {
             GenerateAdditionalBlocks();
         }
     }
 
-    private void AddBlock(BlockModel model)
+    private void AddObject(LevelObjectModel model)
     {
-        BlockObject obj = SimplePool.Spawn(BlockPrefab.gameObject).GetComponent<BlockObject>();
-        obj.transform.position = new Vector3(model.x, -0.5f, model.y);
+        LevelObject prefab = Storage.GetObjectPrefab(model.type);
+        LevelObject obj = SimplePool.Spawn(prefab.gameObject).GetComponent<LevelObject>();
+        obj.transform.position = new Vector3(model.x, 0, model.y);
         obj.transform.SetParent(this.transform);
         obj.index = model.index;
-        Blocks.Add(obj);
+        Objects.Add(obj);
     }
 
     private void RemoveAllBlocks()
     {
-        foreach (BlockObject obj in Blocks)
+        foreach (LevelObject obj in Objects)
         {
             SimplePool.Despawn(obj.gameObject);
         }
-        Blocks.Clear();
-        foreach (BlockObject obj in DestroyingBlocks)
+        Objects.Clear();
+        foreach (LevelObject obj in DestroyingObjects)
         {
             obj.BeforeDestroyStraight();
             SimplePool.Despawn(obj.gameObject);
         }
-        DestroyingBlocks.Clear();
+        DestroyingObjects.Clear();
     }
 
     private IEnumerator BuildRuntime()
@@ -87,8 +89,8 @@ public class LevelBuilder : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(1);
-            BlockObject block = Blocks.Last();
-            if (Vector3.Distance(block.transform.position, Ball.transform.position) < Settings.VisibleFieldLength)
+            BlockObject block = Objects.OfType<BlockObject>().Last();
+            if (Vector3.Distance(block.transform.position, Ball.transform.position) < LevelSettings.VisibleFieldLength)
             {
                 GenerateAdditionalBlocks();
             }
@@ -100,36 +102,36 @@ public class LevelBuilder : MonoBehaviour
         while (true)
         {
             yield return null;
-            List<BlockObject> toRemove = new List<BlockObject>();
-            foreach (BlockObject block in Blocks)
+            List<LevelObject> toRemove = new List<LevelObject>();
+            foreach (LevelObject block in Objects)
             {
                 if (block.index + 1 < Ball.index)
                 {
                     toRemove.Add(block);
                 }
             }
-            foreach (BlockObject b in toRemove)
+            foreach (LevelObject b in toRemove)
             {
-                StartCoroutine(DestroyBlock(b));
-                Blocks.Remove(b);
+                StartCoroutine(DestroyObject(b));
+                Objects.Remove(b);
             }
         }
     }
 
-    private IEnumerator DestroyBlock(BlockObject obj)
+    private IEnumerator DestroyObject(LevelObject obj)
     {
-        DestroyingBlocks.Add(obj);
+        DestroyingObjects.Add(obj);
         yield return obj.BeforeDestroySmoothly();
         SimplePool.Despawn(obj.gameObject);
-        DestroyingBlocks.Remove(obj);
+        DestroyingObjects.Remove(obj);
     }
 
     private void GenerateAdditionalBlocks()
     {
-        List<BlockModel> blockModels = Generator.GeneratePathSegment(Settings.MaxSegmentLength, Settings.PathWidth);
-        foreach (BlockModel model in blockModels)
+        List<LevelObjectModel> models = Generator.GeneratePathSegment(LevelSettings.MaxSegmentLength, LevelSettings.PathWidth);
+        foreach (LevelObjectModel model in models)
         {
-            AddBlock(model);
+            AddObject(model);
         }
     }
 }

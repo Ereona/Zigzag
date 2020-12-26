@@ -15,14 +15,14 @@ public class LevelGenerator
         Helpers.Add(new RightGeneratorHelper());
     }
 
-    public List<BlockModel> GenerateStartPlace()
+    public List<LevelObjectModel> GenerateStartPlace()
     {
-        List<BlockModel> blocks = new List<BlockModel>();
+        List<LevelObjectModel> blocks = new List<LevelObjectModel>();
         for (int i = -1; i <= 1; i++)
         {
             for (int j = -1; j <= 1; j++)
             {
-                BlockModel block = new BlockModel();
+                LevelObjectModel block = new LevelObjectModel();
                 block.x = i;
                 block.y = j;
                 block.index = j;
@@ -34,31 +34,41 @@ public class LevelGenerator
         return blocks;
     }
 
-    public List<BlockModel> GeneratePathSegment(int maxSegmentLength, int pathWidth)
+    public List<LevelObjectModel> GeneratePathSegment(int maxSegmentLength, int pathWidth)
     {
         GeneratorHelper currentHelper = Helpers.Find(c => c.Direction == CurrentDirection);
         if (currentHelper == null)
         {
             throw new System.NotImplementedException("Unknown direction");
         }
+        if (maxSegmentLength < pathWidth)
+        {
+            maxSegmentLength = pathWidth;
+        }
         int pathLength = Random.Range(pathWidth, maxSegmentLength + 1);
-        List<BlockModel> blocks = new List<BlockModel>();
+        List<LevelObjectModel> blocks = new List<LevelObjectModel>();
         for (int i = 0; i < pathLength; i++)
         {
             int minCoord = currentHelper.GetMinWidthCoordForPath(CurrentPos, pathWidth);
             int maxCoord = currentHelper.GetMaxWidthCoordForPath(CurrentPos, pathWidth);
             for (int j = minCoord; j <= maxCoord; j++)
             {
-                BlockModel block = new BlockModel();
+                LevelObjectModel block = new LevelObjectModel();
                 currentHelper.FillBlockCoords(block, CurrentPos, j);
                 block.index = CurrentPos.x + CurrentPos.y;
+                block.type = LevelObjectType.Block;
                 blocks.Add(block);
             }
             CurrentPos += currentHelper.GetShiftForCurrentPosInPath();
         }
         CurrentPos += currentHelper.GetShiftForCurrentPosAfterTurn(pathWidth);
         CurrentDirection = CurrentDirection == Direction.Forward ? Direction.Right : Direction.Forward;
-        int indexShift = (pathWidth + 1) / 2 - 1;
+        blocks.AddRange(GenerateAdditionalObjects(blocks));
         return blocks;
+    }
+
+    protected virtual List<LevelObjectModel> GenerateAdditionalObjects(List<LevelObjectModel> addedBlocks)
+    {
+        return new List<LevelObjectModel>();
     }
 }
